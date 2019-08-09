@@ -18,3 +18,4 @@ tool/batch_summary_*
 video/
 *.zip
 /environments/.pytest_cache/
+.idea
