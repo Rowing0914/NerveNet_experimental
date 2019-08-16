@@ -1,6 +1,5 @@
 import gym
 import environments.register as register
-import numpy as np
 
 # env_name = "CentipedeThree-v1"
 # env_name = "CentipedeFour-v1"

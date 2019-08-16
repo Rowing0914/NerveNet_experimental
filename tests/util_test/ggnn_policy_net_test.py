@@ -4,7 +4,7 @@ from tf_rl.common.utils import eager_setup
 import graph_util.gnn_util as gnn_util
 from graph_util.mujoco_parser import parse_mujoco_graph
 from config.config import get_config
-from network.ggnn_2 import GGNN
+from network.ggnn import GGNN
 import environments.register
 
 eager_setup()

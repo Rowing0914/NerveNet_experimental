@@ -7,7 +7,24 @@ import graph_util.gnn_util as gnn_util
 import graph_util.graph_data_util as graph_data_util
 from config.config import get_config
 from graph_util.mujoco_parser import parse_mujoco_graph
-from network.ggnn import MLP
+
+class MLP(tf.keras.Model):
+    def __init__(self, dims, activations):
+        super(MLP, self).__init__()
+        self.num_layers = len(dims)-1
+        self._summary = ""
+        for i in range(self.num_layers):
+            setattr(self, "layer_{}".format(i), tf.keras.layers.Dense(dims[i], activation=activations[i]))
+            self._summary += "| layer: {} | dim: {} | activation: {} |\n".format(i+1, str(dims[i]), activations[i])
+
+    def call(self, inputs):
+        hidden = inputs
+        for i in range(self.num_layers):
+            hidden = getattr(self, "layer_{}".format(i))(hidden)
+        return hidden
+
+    def __str__(self):
+        return self._summary
 
 eager_setup()
 

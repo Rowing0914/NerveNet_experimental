@@ -24,19 +24,8 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         mujoco_env.MujocoEnv.__init__(self, xml_path, 5)
         utils.EzPickle.__init__(self)
 
-    #     self._get_joint_names()
-    #
-    # def _get_joint_names(self):
-    #     infile = open(self.xml_path, 'r')
-    #     xml_soup = bs(infile.read(), 'xml')
-    #
-    #     # find the names of joints/bodies
-    #     joints = xml_soup.find('worldbody').find_all('joint')
-    #     self.joint_names = [joint['name'] for joint in joints]
-    #     root_index = self.joint_names.index("root")
-    #     del self.joint_names[root_index]
-
     def step(self, a):
+        """ Same as https://github.com/openai/gym/blob/master/gym/envs/mujoco/ant.py#L10 """
         self._action_val = a
         xposbefore = self.get_body_com("torso")[0]
         self.do_simulation(a, self.frame_skip)
@@ -48,8 +37,7 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         survive_reward = 1.0
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         state = self.state_vector()
-        notdone = np.isfinite(state).all() \
-                  and state[2] >= 0.2 and state[2] <= 1.0
+        notdone = np.isfinite(state).all() and state[2] >= 0.2 and state[2] <= 1.0
         done = not notdone
         ob = self._get_obs()
         return ob, reward, done, dict(
@@ -59,13 +47,7 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
             reward_survive=survive_reward)
 
     def _get_obs(self):
-        # original code
-        # return np.concatenate([
-        #     self.sim.data.qpos.flat[2:],
-        #     self.sim.data.qvel.flat,
-        #     np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
-        # ])
-
+        """ original code """
         return np.concatenate([
             self.sim.data.body_xpos[2:, :].flat,
             self.sim.data.body_xquat[2:, :].flat,
@@ -94,12 +76,6 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         'world', 'torso', 'aux_1', 'f_1', 'aux_2', 'f_2', 'aux_3', 'f_3', 'aux_4', 'f_4'
         So that we remove first 2 items since it doesn't relate to the actuator
         """
-
-        # print(self.sim.data.body_xpos.shape) # 10 x 3
-        # print(self.sim.data.body_xquat.shape) # 10 x 4
-        # print(self.sim.data.cvel.shape) # 10 x 6
-        # print(self.sim.data.cinert.shape) # 10 x 10
-        # asdf
         flat_obs = np.concatenate([
             self.sim.data.body_xpos[2:, :].flat,
             self.sim.data.body_xquat[2:, :].flat,
@@ -256,14 +232,15 @@ class AntWithGoalEnv(mujoco_env.MujocoEnv, utils.EzPickle):
             reward_contact=-contact_cost,
             reward_survive=survive_reward)
 
-    def __get_obs(self):
+    def _get_obs(self):
+        """ original code """
         return np.concatenate([
             self.sim.data.qpos.flat[2:],
             self.sim.data.qvel.flat,
             np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
         ])
 
-    def _get_obs(self):
+    def __get_obs(self):
         """
         My implementation of Obs including `Root`
 
@@ -285,11 +262,6 @@ class AntWithGoalEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         So that we remove first 2 items since it doesn't relate to the actuator
         """
 
-        # print(self.sim.data.body_xpos.shape) # 10 x 3
-        # print(self.sim.data.body_xquat.shape) # 10 x 4
-        # print(self.sim.data.cvel.shape) # 10 x 6
-        # print(self.sim.data.cinert.shape) # 10 x 10
-        # asdf
         flat_obs = np.concatenate([
             self.sim.data.body_xpos[2:, :].flat,
             self.sim.data.body_xquat[2:, :].flat,
@@ -314,9 +286,6 @@ class AntWithGoalEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         qvel = self.init_qvel + self.np_random.randn(self.model.nv) * .1
         self.set_state(qpos, qvel)
         return self._get_obs()
-
-    # def viewer_setup(self):
-    #     self.viewer.cam.distance = self.model.stat.extent * 0.5
 
     def render(self, mode='human', width=DEFAULT_SIZE, height=DEFAULT_SIZE):
         """
