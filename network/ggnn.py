@@ -25,9 +25,9 @@ class GGNN(tf.keras.Model):
     Implementation based on https://arxiv.org/abs/1511.05493
     """
 
-    def __init__(self, state_dim, node_info):
+    def __init__(self, state_dim, node_info, rec_hidden_unit=30, rec_output_unit=30, recurrent_step=3):
         super(GGNN, self).__init__()
-        self.recurrent_step = 3
+        self.recurrent_step = recurrent_step
         self.state_dim = state_dim
         self.node_info = node_info
 
@@ -51,7 +51,7 @@ class GGNN(tf.keras.Model):
         # Update the internal memory
         # num_node x node_state_dim -> num_node x node_state_dim
         # self.recurrent_unit = tf.keras.layers.CuDNNGRU(state_dim, return_state=True, stateful=True)
-        self.recurrent_unit = GRU_cell(hidden_unit=30, output_nodes=30)
+        self.recurrent_unit = GRU_cell(hidden_unit=rec_hidden_unit, output_nodes=rec_output_unit)
 
         # Output Model
         # num_node x hidden_dim -> num_node x 1(used to construct the mu for each action)

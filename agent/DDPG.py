@@ -9,7 +9,11 @@ class DDPG:
         self.num_action = num_action
         self.eval_flg = False
         self.index_timestep = 0
-        self.actor = ggnn(state_dim=params.num_node_features, node_info=node_info)
+        self.actor = ggnn(state_dim=params.num_node_features,
+                          node_info=node_info,
+                          rec_hidden_unit=params.rec_hidden_unit,
+                          rec_output_unit=params.rec_output_unit,
+                          recurrent_step=params.recurrent_step)
         self.critic = critic(1)
         self.target_actor = deepcopy(self.actor)
         self.target_critic = deepcopy(self.critic)
