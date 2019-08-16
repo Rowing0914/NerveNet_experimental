@@ -2,9 +2,9 @@ import gym
 import environments.register as register
 
 # env_name = "CentipedeThree-v1"
-# env_name = "CentipedeFour-v1"
+env_name = "CentipedeFour-v1"
 # env_name = "AntS-v1"
-env_name = "AntWithGoal-v1"
+# env_name = "AntWithGoal-v1"
 # env_name = "Ant-v2"
 # env_name = "Humanoid-v2"
 # env_name = "CentipedeFive-v1"

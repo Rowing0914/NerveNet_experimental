@@ -2,6 +2,13 @@
 <font color="red">This is not the original repo of Rowing0914. \
  So that Please refer(Give a STAR!!) to https://github.com/WilsonWangTHU/NerveNet</font>
 
+# Main Envs
+- Ant With Goal-v1
+<img src="./images/ant_with_goal.png" width=400>
+
+- CentipedeFour-v1
+<img src="./images/CentipedeFour.png" width=400>
+
 It is the github repo for the paper: [NerveNet: Learning Structured Policy with Graph Neural Networks](http://www.cs.toronto.edu/~tingwuwang/nervenet.html).
 # Dependency
 
