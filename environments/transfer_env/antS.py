@@ -9,7 +9,7 @@ import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
 import environments.init_path as init_path
-import os, pickle
+import os
 from bs4 import BeautifulSoup as bs
 
 DEFAULT_SIZE = 500

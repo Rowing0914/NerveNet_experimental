@@ -6,12 +6,17 @@
 #       Tingwu (Wilson) Wang, Aug. 30nd, 2017
 # -----------------------------------------------------------------------------
 
+import os
+
+import num2words
 import numpy as np
+from bs4 import BeautifulSoup as bs
 from gym import utils
 from gym.envs.mujoco import mujoco_env
+
 import environments.init_path as init_path
-import os
-import num2words
+
+DEFAULT_SIZE = 500
 
 
 class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
@@ -31,14 +36,14 @@ class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         # get the path of the environments
         if is_crippled:
             xml_name = 'CpCentipede' + self.get_env_num_str(CentipedeLegNum) + \
-                '.xml'
+                       '.xml'
         else:
             xml_name = 'Centipede' + self.get_env_num_str(CentipedeLegNum) + \
-                '.xml'
-        xml_path = os.path.join(init_path.get_base_dir(),
-                                'environments', 'assets',
-                                xml_name)
-        xml_path = str(os.path.abspath(xml_path))
+                       '.xml'
+        self.xml_path = os.path.join(init_path.get_base_dir(),
+                                     'environments', 'assets',
+                                     xml_name)
+        self.xml_path = str(os.path.abspath(self.xml_path))
         self.num_body = int(np.ceil(CentipedeLegNum / 2.0))
         self._control_cost_coeff = .5 * 4 / CentipedeLegNum
         self._contact_cost_coeff = 0.5 * 1e-3 * 4 / CentipedeLegNum
@@ -47,16 +52,28 @@ class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         # make sure the centipede is not born to be end of episode
         self.body_qpos_id = 6 + 6 + np.array(range(self.num_body)) * 6
         self.body_qpos_id[-1] = 5
+        self._get_joint_names()
 
-        mujoco_env.MujocoEnv.__init__(self, xml_path, 5)
+        mujoco_env.MujocoEnv.__init__(self, self.xml_path, 5)
 
         utils.EzPickle.__init__(self)
+
+    def _get_joint_names(self):
+        infile = open(self.xml_path, 'r')
+        xml_soup = bs(infile.read(), 'xml')
+
+        # find the names of joints/bodies
+        joints = xml_soup.find('worldbody').find_all('joint')
+        self.joint_names = [joint['name'] for joint in joints]
+        root_index = self.joint_names.index("root")
+        del self.joint_names[root_index]
 
     def get_env_num_str(self, number):
         num_str = num2words.num2words(number)
         return num_str[0].upper() + num_str[1:]
 
     def step(self, a):
+        self._action_val = a
         xposbefore = self.get_body_com("torso_" + str(self.num_body - 1))[0]
         self.do_simulation(a, self.frame_skip)
         xposafter = self.get_body_com("torso_" + str(self.num_body - 1))[0]
@@ -73,7 +90,7 @@ class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         # check if finished
         state = self.state_vector()
         notdone = np.isfinite(state).all() and \
-            self._check_height() and self._check_direction()
+                  self._check_height() and self._check_direction()
         done = not notdone
         # done = False
 
@@ -87,10 +104,7 @@ class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         )
 
     def _get_obs(self):
-        """ Original NerveNet Obs """
-        # print(self.sim.data.qpos.shape)
-        # print(self.sim.data.qvel.shape)
-        # print(self.sim.data.cfrc_ext.shape)
+        """ Original code """
         return np.concatenate([
             self.sim.data.qpos.flat[2:],
             self.sim.data.qvel.flat,
@@ -112,10 +126,6 @@ class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
             - graph_obs = obs are organised by associating data with each node
 
         """
-        # print(self.sim.data.body_xpos.shape) # 11 x 3
-        # print(self.sim.data.body_xquat.shape) # 11 x 4
-        # print(self.sim.data.cvel.shape) # 11 x 6
-        # print(self.sim.data.cinert.shape) # 11 x 10
         flat_obs = np.concatenate([
             self.sim.data.body_xpos[1:, :].flat,
             self.sim.data.body_xquat[1:, :].flat,
@@ -170,6 +180,65 @@ class CentipedeEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         y_diff = np.abs(y_pos_pre - y_pos_post)
         return (y_diff < 0.45).all()
 
+    def render(self, mode='human', width=DEFAULT_SIZE, height=DEFAULT_SIZE):
+        """
+        === Original Code ===
+        i didn't change anything at all
+        """
+
+        if self.viewer:
+            del self.viewer._markers[:]
+
+        if mode == 'rgb_array':
+            camera_id = None
+            camera_name = 'track'
+            if self.rgb_rendering_tracking and camera_name in self.model.camera_names:
+                camera_id = self.model.camera_name2id(camera_name)
+            """
+            ======================
+            This is where I change
+            ======================
+            """
+            if self.viewer:
+                self.add_joints_markers()
+            self._get_viewer(mode).render(width, height, camera_id=camera_id)
+            # window size used for old mujoco-py:
+            data = self._get_viewer(mode).read_pixels(width, height, depth=False)
+            # original image is upside-down, so flip it
+            return data[::-1, :, :]
+        elif mode == 'depth_array':
+            self._get_viewer(mode).render(width, height)
+            # window size used for old mujoco-py:
+            # Extract depth part of the read_pixels() tuple
+            data = self._get_viewer(mode).read_pixels(width, height, depth=True)[1]
+            # original image is upside-down, so flip it
+            return data[::-1, :]
+        elif mode == 'human':
+            """
+            ======================
+            This is where I change
+            ======================
+            """
+            if self.viewer:
+                self.add_joints_markers()
+            self._get_viewer(mode).render()
+
+    def add_joints_markers(self):
+        """ This adds the text annotation, which is associated with each joint, in the simulation
+        To change the appearance of Text annotation, you can check the source code below.
+        - https://github.com/openai/mujoco-py/blob/master/mujoco_py/mjrendercontext.pyx
+
+        - Note:
+            Changeable attributes are shown L:232 to L:248 => (As of 31/07/2019)
+        """
+        for joint_name in self.joint_names:
+            # for more APIs => https://github.com/openai/mujoco-py/blob/master/mujoco_py/generated/wrappers.pxi
+            joint_id = self.sim.model.joint_name2id(joint_name)
+            joint_pos = self.sim.data.body_xpos[joint_id, :]
+            self.viewer.add_marker(pos=joint_pos,
+                                   label="%s: %.3f" % (joint_name, self._action_val[joint_id - 1]),
+                                   size=[0, 0, 0])
+
 
 '''
     the following environments are just models with even number legs
@@ -210,6 +279,7 @@ class CpCentipedeFourteenEnv(CentipedeEnv):
 
     def __init__(self):
         CentipedeEnv.__init__(self, CentipedeLegNum=14, is_crippled=True)
+
 
 # regular
 
