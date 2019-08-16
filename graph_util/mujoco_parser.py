@@ -32,13 +32,13 @@ XML_ASSERT_DIR = os.path.join(init_path.get_base_dir(),
         The 'root' type is the combination of the top level 'body' node and
         the top level free 'joint' (two nodes combined)
         Also, additional input will be assigned to the root node
-        (e.g. the postion of the targer).
+        (e.g. the position of the target).
 
         For different tasks, we should have different MLP for each root.
 
     @geom, @body, @joint:
         The structure defined in the xml files. Ideally, the MLP for input,
-        propogation, and output could be shared among different models.
+        propagation, and output could be shared among different models.
 '''
 _NODE_TYPE = ['root', 'joint', 'body']  # geom is removed
 EDGE_TYPE = {'self_loop': 0, 'root-root': 0,  # root-root is loop, also 0
@@ -149,13 +149,13 @@ def parse_mujoco_graph(task_name,
     else:
         assert 'sE' in root_connection_option
 
-    return dict(tree=tree,
+    return dict(tree=None, # this causes the memory leak so that I dare not to include this in output
                 relation_matrix=relation_matrix,
                 node_type_dict=node_type_dict,
                 output_type_dict=output_type_dict,
                 input_dict=input_dict,
                 output_list=output_list,
-                debug_info=debug_info,
+                debug_info=None,
                 node_parameters=node_parameters,
                 para_size_dict=para_size_dict,
                 num_nodes=len(tree))

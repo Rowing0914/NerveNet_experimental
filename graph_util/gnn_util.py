@@ -8,11 +8,11 @@
 # -----------------------------------------------------------------------------
 
 
-import graph_util.init_path as init_path
-from util import logger
-import graph_util.mujoco_parser as mujoco_parser
 import numpy as np
 
+import graph_util.init_path as init_path
+import graph_util.mujoco_parser as mujoco_parser
+from util import logger
 
 __all__ = ['io_size_check']
 _BASE_PATH = init_path.get_abs_base_dir()
@@ -133,6 +133,30 @@ def get_inverse_type_offset(node_info, mode):
     return node_info
 
 
+def get_adjacency_matrices(node_info):
+    """ Convert the relation matrices into the adjacency matrices """
+    adjacency_matrices = {
+        edge_type: np.array(node_info["relation_matrix"] == edge_type).astype(np.float32)
+        for edge_type in node_info["edge_type_list"]
+    }
+    node_info["adjacency_matrix"] = adjacency_matrices
+    return node_info
+
+
+def get_stacked_node_params(node_info):
+    """
+    Returns the stacked node parameters which used for the propagation
+    via adjacency matrix in the model
+    """
+    temp = np.array([])
+    for node_type in node_info["node_type_dict"]:
+        if node_type == "root":
+            temp = node_info["node_parameters"][node_type]
+        temp = np.vstack([temp, node_info["node_parameters"][node_type]])
+    node_info["stacked_node_params"] = temp
+    return node_info
+
+
 def get_receive_send_idx(node_info):
     # register the edges that shows up, get the number of edge type
     edge_dict = mujoco_parser.EDGE_TYPE
@@ -164,4 +188,24 @@ def get_receive_send_idx(node_info):
     node_info['send_idx'] = send_idx
     node_info['num_edges'] = len(receive_idx)
 
+    return node_info
+
+def add_node_info(node_info, input_feat_dim):
+    # step 2: check for ob size for each node type, construct the node dict
+    node_info = construct_ob_size_dict(node_info, input_feat_dim)
+
+    # step 3: get the inverse node offsets (used to construct gather idx)
+    node_info = get_inverse_type_offset(node_info, 'node')
+
+    # step 4: get the inverse node offsets (used to gather output idx)
+    node_info = get_inverse_type_offset(node_info, 'output')
+
+    # step 5: register existing edge and get the receive and send index
+    node_info = get_receive_send_idx(node_info)
+
+    # step 6: get the stacked node params
+    node_info = get_stacked_node_params(node_info)
+
+    # step 7: get the adjacency matrices
+    node_info = get_adjacency_matrices(node_info)
     return node_info
