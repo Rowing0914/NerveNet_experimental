@@ -5,7 +5,6 @@ from collections import deque
 from tf_rl.common.memory import ReplayBuffer
 from tf_rl.common.monitor import Monitor
 from tf_rl.common.networks import DDPG_Critic as Critic
-from tf_rl.common.random_process import OrnsteinUhlenbeckProcess
 from tf_rl.common.utils import *
 from tf_rl.common.visualise import visualise_act_and_dist
 
@@ -34,8 +33,6 @@ parser.add_argument("--reward_buffer_ep", default=10, type=int, help="reward_buf
 parser.add_argument("--gamma", default=0.99, type=float, help="discount factor")
 parser.add_argument("--soft_update_tau", default=1e-2, type=float, help="soft-update tau")
 parser.add_argument("--L2_reg", default=0.5, type=float, help="magnitude of L2 regularisation")
-parser.add_argument("--mu", default=0.3, type=float, help="magnitude of randomness")
-parser.add_argument("--sigma", default=0.2, type=float, help="magnitude of randomness")
 parser.add_argument("--action_range", default=[-1., 1.], type=list, help="magnitude of L2 regularisation")
 parser.add_argument("--input_feat_dim", default=64, type=int, help="feature dim for the input embedding")
 parser.add_argument("--debug_flg", default=False, type=bool, help="debug mode or not")
@@ -46,13 +43,11 @@ params.goal = 0
 
 now = datetime.datetime.now()
 
-mu = str(params.mu).split(".")
-mu = str(mu[0]+mu[1])
-params.log_dir = "../../logs/logs/DDPG-GGNN-{}-seed{}/{}-mu{}".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
-params.actor_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/actor-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
-params.critic_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/critic-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
-params.video_dir = "../../logs/video/DDPG-GGNN-{}-seed{}/{}-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
-params.plot_path = "../../logs/plots/DDPG-GGNN-{}-seed{}/{}-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
+params.log_dir = "../../logs/logs/DDPG-GGNN-{}-seed{}/{}".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
+params.actor_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/actor/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
+params.critic_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/critic/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
+params.video_dir = "../../logs/video/DDPG-GGNN-{}-seed{}/{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
+params.plot_path = "../../logs/plots/DDPG-GGNN-{}-seed{}/{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
 
 # Instantiate Env
 env = gym.make(params.env_name)
@@ -66,14 +61,13 @@ tf.random.set_random_seed(params.seed)
 replay_buffer = ReplayBuffer(params.memory_size)
 reward_buffer = deque(maxlen=params.reward_buffer_ep)
 summary_writer = tf.contrib.summary.create_file_writer(params.log_dir)
-random_process = OrnsteinUhlenbeckProcess(size=env.action_space.shape[0], theta=0.15, mu=params.mu, sigma=params.sigma)
 
 # Reading out the information regarding the robot from the XML
 node_info = parse_mujoco_graph(task_name=params.env_name)
 node_info = gnn_util.add_node_info(node_info, input_feat_dim=params.input_feat_dim)
 
 # Invoke the agent
-agent = DDPG(GGNN, Critic, node_info, env.action_space.shape[0], random_process, params)
+agent = DDPG(GGNN, Critic, node_info, env.action_space.shape[0], params)
 
 
 """ === Training Phase === """
@@ -92,7 +86,6 @@ with summary_writer.as_default():
             state = env.reset()
             total_reward = 0
             start = time.time()
-            agent.random_process.reset_states()
             done = False
             episode_len = 0
             while not done:

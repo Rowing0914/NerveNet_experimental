@@ -1,15 +1,16 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+XAVIER_INIT = tf.contrib.layers.xavier_initializer()
 
 class GRU_cell(tf.keras.Model):
     def __init__(self, hidden_unit, output_nodes):
         super(GRU_cell, self).__init__()
-        self.i_to_r = tf.keras.layers.Dense(hidden_unit, activation="sigmoid")
-        self.i_to_z = tf.keras.layers.Dense(hidden_unit, activation="sigmoid")
-        self.i_to_h = tf.keras.layers.Dense(hidden_unit, activation="tanh")
-        self.h_to_h = tf.keras.layers.Dense(hidden_unit, activation="linear")
-        self.h_to_o = tf.keras.layers.Dense(output_nodes, activation="tanh")
+        self.i_to_r = tf.keras.layers.Dense(hidden_unit, activation="sigmoid", kernel_initializer=XAVIER_INIT)
+        self.i_to_z = tf.keras.layers.Dense(hidden_unit, activation="sigmoid", kernel_initializer=XAVIER_INIT)
+        self.i_to_h = tf.keras.layers.Dense(hidden_unit, activation="tanh", kernel_initializer=XAVIER_INIT)
+        self.h_to_h = tf.keras.layers.Dense(hidden_unit, activation="linear", kernel_initializer=XAVIER_INIT)
+        self.h_to_o = tf.keras.layers.Dense(output_nodes, activation="tanh", kernel_initializer=XAVIER_INIT)
 
     def call(self, x, previous_hidden_state):
         z = self.i_to_z(x)
@@ -34,14 +35,14 @@ class GGNN(tf.keras.Model):
         # Each type of nodes has its own mapping func
         # num_node x obs(for each node)-> num_node x node_state_dim
         self.obs_to_node_embed = {
-            node_id: tf.keras.layers.Dense(state_dim, activation="tanh")
+            node_id: tf.keras.layers.Dense(state_dim, activation="tanh", kernel_initializer=XAVIER_INIT)
             for node_id in self.node_info["input_dict"]
         }
 
         # Each type of nodes has its own propagation func
         # num_node x node_params_dim -> num_node x node_state_dim
         self.processed_node_params = {
-            node_type: tf.keras.layers.Dense(state_dim, activation="tanh")(
+            node_type: tf.keras.layers.Dense(state_dim, activation="tanh", kernel_initializer=XAVIER_INIT)(
                 tf.cast(self.node_info["node_parameters"][node_type], dtype=tf.float32)
             )
             for node_type in self.node_info["node_type_dict"]
@@ -55,10 +56,11 @@ class GGNN(tf.keras.Model):
 
         # Output Model
         # num_node x hidden_dim -> num_node x 1(used to construct the mu for each action)
-        self.hidden_to_output = tf.keras.layers.Dense(1, activation="tanh")
+        self.hidden_to_output = tf.keras.layers.Dense(1, activation="tanh", kernel_initializer=XAVIER_INIT)
 
         # STD for Action Distribution(Gaussian)
         self.sigmas = tf.Variable([0.3]*len(self.node_info["output_list"]))
+        # self.sigmas = tf.keras.layers.Dense(len(self.node_info["output_list"]), activation='linear', kernel_initializer=XAVIER_INIT)
 
     def call(self, obs):
         # step 1: Mapping Observation to Node Embedding
@@ -96,10 +98,8 @@ class GGNN(tf.keras.Model):
 
     def _dict_to_matrix(self, loop_list, item):
         for i, data in enumerate(loop_list):
-            # print(item[data].shape)
             if i == 0:
                 temp = item[data]
             else:
                 temp = tf.concat([temp, item[data]], axis=0)
-        # print("=== done ===\n")
         return tf.cast(temp, dtype=tf.float32)

@@ -4,7 +4,7 @@ from copy import deepcopy
 from tf_rl.common.utils import create_checkpoint
 
 class DDPG:
-    def __init__(self, ggnn, critic, node_info, num_action, random_process, params):
+    def __init__(self, ggnn, critic, node_info, num_action, params):
         self.params = params
         self.num_action = num_action
         self.eval_flg = False
@@ -19,7 +19,6 @@ class DDPG:
         self.target_critic = deepcopy(self.critic)
         self.actor_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4)
         self.critic_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
-        self.random_process = random_process
         self.actor_manager = create_checkpoint(model=self.actor,
                                                optimizer=self.actor_optimizer,
                                                model_dir=params.actor_model_dir)
@@ -29,10 +28,9 @@ class DDPG:
 
     def predict(self, state):
         action = self._select_action(tf.constant(state[np.newaxis, ...].astype(np.float32)))
-        return action.numpy().flatten() + self.random_process.sample()
+        return action.numpy().flatten()
 
     def eval_predict(self, state):
-        """ Deterministic behaviour """
         action = self._select_action(tf.constant(state[np.newaxis, ...].astype(np.float32)))
         return action.numpy().flatten()
 
