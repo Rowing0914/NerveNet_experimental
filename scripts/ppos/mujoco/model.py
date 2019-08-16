@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from tests.ppos.mujoco.hparams import HyperParams as hp
+from scripts.ppos.mujoco.hparams import HyperParams as hp
 
 
 class Actor(nn.Module):

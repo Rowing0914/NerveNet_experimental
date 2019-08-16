@@ -1,7 +1,7 @@
 import numpy as np
-from tests.ppos.mujoco.utils.utils import *
-from tests.ppos.mujoco.hparams import HyperParams as hp
-from tests.ppos.mujoco.model import Actor
+from scripts.ppos.mujoco.utils.utils import *
+from scripts.ppos.mujoco.hparams import HyperParams as hp
+from scripts.ppos.mujoco.model import Actor
 
 
 def get_gae(rewards, masks, values):

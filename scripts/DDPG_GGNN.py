@@ -20,11 +20,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--env_name", default="CentipedeFour-v1", type=str, help="Env title")
 # parser.add_argument("--env_name", default="AntWithGoal-v1", type=str, help="Env title")
 parser.add_argument("--seed", default=123, type=int, help="seed for randomness")
-# parser.add_argument("--num_frames", default=1_000_000, type=int, help="total frame in a training")
-parser.add_argument("--num_frames", default=500_000, type=int, help="total frame in a training")
-# parser.add_argument("--num_frames", default=20_000, type=int, help="total frame in a training")
+parser.add_argument("--num_frames", default=1_000_000, type=int, help="total frame in a training")
+# parser.add_argument("--num_frames", default=500_000, type=int, help="total frame in a training")
 parser.add_argument("--eval_interval", default=100_000, type=int, help="a frequency of evaluation in training phase")
-# parser.add_argument("--eval_interval", default=5_000, type=int, help="a frequency of evaluation in training phase")
 parser.add_argument("--memory_size", default=100_000, type=int, help="memory size in a training")
 parser.add_argument("--learning_start", default=10_000, type=int, help="length before training")
 parser.add_argument("--batch_size", default=32, type=int, help="batch size of each iteration of update")
@@ -33,8 +31,8 @@ parser.add_argument("--reward_buffer_ep", default=10, type=int, help="reward_buf
 parser.add_argument("--gamma", default=0.99, type=float, help="discount factor")
 parser.add_argument("--soft_update_tau", default=1e-2, type=float, help="soft-update tau")
 parser.add_argument("--L2_reg", default=0.5, type=float, help="magnitude of L2 regularisation")
-parser.add_argument("--mu", default=0.2, type=float, help="magnitude of randomness")
-parser.add_argument("--sigma", default=0.05, type=float, help="magnitude of randomness")
+parser.add_argument("--mu", default=0.3, type=float, help="magnitude of randomness")
+parser.add_argument("--sigma", default=0.2, type=float, help="magnitude of randomness")
 parser.add_argument("--action_range", default=[-1., 1.], type=list, help="magnitude of L2 regularisation")
 parser.add_argument("--input_feat_dim", default=64, type=int, help="feature dim for the input embedding")
 parser.add_argument("--debug_flg", default=False, type=bool, help="debug mode or not")
@@ -45,11 +43,13 @@ params.goal = 0
 
 now = datetime.datetime.now()
 
-params.log_dir = "../logs/logs/" + now.strftime("%Y%m%d-%H%M%S") + "-DDPG-GGNN/"
-params.actor_model_dir = "../logs/models/" + now.strftime("%Y%m%d-%H%M%S") + "-DDPG-GGNN_actor/"
-params.critic_model_dir = "../logs/models/" + now.strftime("%Y%m%d-%H%M%S") + "-DDPG-GGNN_critic/"
-params.video_dir = "../logs/video/GGNN_{}".format(now.strftime("%Y%m%d-%H%M%S") + "_" + str(params.env_name))
-params.plot_path = "../logs/plots/GGNN_{}/".format(now.strftime("%Y%m%d-%H%M%S") + "_" + str(params.env_name))
+mu = str(params.mu).split(".")
+mu = str(mu[0]+mu[1])
+params.log_dir = "../../logs/logs/DDPG-GGNN-{}-seed{}/{}-mu{}".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
+params.actor_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/actor-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
+params.critic_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/critic-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
+params.video_dir = "../../logs/video/DDPG-GGNN-{}-seed{}/{}-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
+params.plot_path = "../../logs/plots/DDPG-GGNN-{}-seed{}/{}-mu{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]), mu)
 
 # Instantiate Env
 env = gym.make(params.env_name)

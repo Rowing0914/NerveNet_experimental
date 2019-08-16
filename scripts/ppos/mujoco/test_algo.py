@@ -3,9 +3,9 @@ import gym
 import torch
 import argparse
 
-from tests.ppos.mujoco.model import Actor, Critic
-from tests.ppos.mujoco.utils.utils import get_action
-from tests.ppos.mujoco.utils.running_state import ZFilter
+from scripts.ppos.mujoco.model import Actor, Critic
+from scripts.ppos.mujoco.utils.utils import get_action
+from scripts.ppos.mujoco.utils.running_state import ZFilter
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--env', type=str, default="Hopper-v2",

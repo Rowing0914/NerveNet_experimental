@@ -1,14 +1,44 @@
+"""
+Date: 16/08/2019
+
+Original code is here
+https://github.com/reinforcement-learning-kr/pg_travel/blob/master/mujoco/main.py
+
+MIT License
+
+Copyright (c) 2018 Woongwon Lee
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+"""
+
 import os
 import gym
 import torch
 import argparse
 import numpy as np
 import torch.optim as optim
-from tests.ppos.mujoco.model import Actor, Critic
-from tests.ppos.mujoco.utils.utils import get_action, save_checkpoint
+from scripts.ppos.mujoco.model import Actor, Critic
+from scripts.ppos.mujoco.utils.utils import get_action, save_checkpoint
 from collections import deque
-from tests.ppos.mujoco.utils.running_state import ZFilter
-from tests.ppos.mujoco.hparams import HyperParams as hp
+from scripts.ppos.mujoco.utils.running_state import ZFilter
+from scripts.ppos.mujoco.hparams import HyperParams as hp
 from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser()
@@ -24,13 +54,13 @@ parser.add_argument('--logdir', type=str, default='logs',
 args = parser.parse_args()
 
 if args.algorithm == "PG":
-    from tests.ppos.mujoco.agent.vanila_pg import train_model
+    from scripts.ppos.mujoco.agent.vanila_pg import train_model
 elif args.algorithm == "NPG":
-    from tests.ppos.mujoco.agent.tnpg import train_model
+    from scripts.ppos.mujoco.agent.tnpg import train_model
 elif args.algorithm == "TRPO":
-    from tests.ppos.mujoco.agent.trpo_gae import train_model
+    from scripts.ppos.mujoco.agent.trpo_gae import train_model
 elif args.algorithm == "PPO":
-    from tests.ppos.mujoco.agent.ppo_gae import train_model
+    from scripts.ppos.mujoco.agent.ppo_gae import train_model
 
 
 if __name__=="__main__":

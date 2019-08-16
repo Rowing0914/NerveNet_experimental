@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from tests.ppos.mujoco.hparams import HyperParams as hp
-from tests.ppos.mujoco.utils.utils import log_density
+from scripts.ppos.mujoco.hparams import HyperParams as hp
+from scripts.ppos.mujoco.utils.utils import log_density
 
 
 def get_returns(rewards, masks):

@@ -1,6 +1,6 @@
 from graph_util.mujoco_parser import parse_mujoco_graph
 from graph_util.graph_operator import GraphOperator
-from tests.dgl_samples.gcn import GCN
+from scripts.dgl_samples.gcn import GCN
 
 from collections import deque
 import torch as th
