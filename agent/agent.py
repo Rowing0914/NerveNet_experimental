@@ -189,37 +189,28 @@ class base_agent(multiprocessing.Process):
                 )
 
             feed_dict = {
-                self.batch_size_int_placeholder:
-                    int(self.last_batch_size),
-                self.receive_idx_placeholder:
-                    self.receive_idx,
-                self.inverse_node_type_idx_placeholder:
-                    self.inverse_node_type_idx,
-                self.inverse_output_type_idx_placeholder:
-                    self.inverse_output_type_idx
+                self.batch_size_int_placeholder: int(self.last_batch_size),
+                self.receive_idx_placeholder: self.receive_idx,
+                self.inverse_node_type_idx_placeholder: self.inverse_node_type_idx,
+                self.inverse_output_type_idx_placeholder: self.inverse_output_type_idx
             }
 
             # append the input obs and parameters
             for i_node_type in self.node_info['node_type_dict']:
-                feed_dict[self.graph_obs_placeholder[i_node_type]] = \
-                    graph_obs[i_node_type]
-                feed_dict[self.graph_parameters_placeholder[i_node_type]] = \
-                    graph_parameters[i_node_type]
+                feed_dict[self.graph_obs_placeholder[i_node_type]] = graph_obs[i_node_type]
+                feed_dict[self.graph_parameters_placeholder[i_node_type]] = graph_parameters[i_node_type]
 
             # append the send idx
             for i_edge in self.node_info['edge_type_list']:
-                feed_dict[self.send_idx_placeholder[i_edge]] = \
-                    self.send_idx[i_edge]
+                feed_dict[self.send_idx_placeholder[i_edge]] = self.send_idx[i_edge]
 
             # append the node type idx
             for i_node_type in self.node_info['node_type_dict']:
-                feed_dict[self.node_type_idx_placeholder[i_node_type]] \
-                    = self.node_type_idx[i_node_type]
+                feed_dict[self.node_type_idx_placeholder[i_node_type]] = self.node_type_idx[i_node_type]
 
             # append the output type idx
             for i_output_type in self.node_info['output_type_dict']:
-                feed_dict[self.output_type_idx_placeholder[i_output_type]] \
-                    = self.output_type_idx[i_output_type]
+                feed_dict[self.output_type_idx_placeholder[i_output_type]] = self.output_type_idx[i_output_type]
 
             # if the raw_obs is needed for the baseline
             if self.raw_obs_placeholder is not None:

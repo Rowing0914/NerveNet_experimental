@@ -183,8 +183,7 @@ class GGNN(policy_network):
             else:
                 assert False, logger.error('Input mustnt be given to the ggnn')
 
-            input_parameter_dtype = tf.int32 \
-                if 'noninput' in self._gnn_embedding_option else tf.float32
+            input_parameter_dtype = tf.int32 if 'noninput' in self._gnn_embedding_option else tf.float32
             self._input_parameters = {
                 node_type: tf.placeholder(
                     input_parameter_dtype,
