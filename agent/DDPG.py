@@ -58,7 +58,7 @@ class DDPG:
         # Update Critic
         with tf.GradientTape() as tape:
             # critic takes as input states, actions so that we combine them before passing them
-            next_Q = self.target_critic(next_states, self.target_actor(next_states))
+            next_Q = self.target_critic(next_states, self.target_actor(tf.reshape(next_states, [32, 1, 97]))[0])
             q_values = self.critic(states, actions)
 
             # compute the target discounted Q(s', a')
@@ -77,7 +77,7 @@ class DDPG:
 
         # Update Actor
         with tf.GradientTape() as tape:
-            actor_loss = -tf.math.reduce_mean(self.critic(states, self.actor(states)))
+            actor_loss = -tf.math.reduce_mean(self.critic(states, self.actor(tf.reshape(states, [32, 1, 97]))[0]))
 
         # get gradients
         actor_grads = tape.gradient(actor_loss, self.actor.trainable_variables)

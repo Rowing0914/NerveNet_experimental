@@ -31,11 +31,11 @@ parser.add_argument("--recurrent_step", default=3, type=int, help="number of hid
 parser.add_argument("--rec_hidden_unit", default=30, type=int, help="number of hidden units in recurrent units")
 parser.add_argument("--rec_output_unit", default=30, type=int, help="number of output units in recurrent units")
 parser.add_argument("--reward_buffer_ep", default=10, type=int, help="reward_buffer size")
+parser.add_argument("--input_feat_dim", default=64, type=int, help="feature dim for the input embedding")
 parser.add_argument("--gamma", default=0.99, type=float, help="discount factor")
 parser.add_argument("--soft_update_tau", default=1e-2, type=float, help="soft-update tau")
 parser.add_argument("--L2_reg", default=0.5, type=float, help="magnitude of L2 regularisation")
 parser.add_argument("--action_range", default=[-1., 1.], type=list, help="magnitude of L2 regularisation")
-parser.add_argument("--input_feat_dim", default=64, type=int, help="feature dim for the input embedding")
 parser.add_argument("--debug_flg", default=False, type=bool, help="debug mode or not")
 parser.add_argument("--google_colab", default=False, type=bool, help="if you are executing this on GoogleColab")
 params = parser.parse_args()
@@ -98,6 +98,15 @@ with summary_writer.as_default():
                 next_state, reward, done, info = env.step(action * env.action_space.high)
                 replay_buffer.add(state, action, reward, next_state, done)
 
+                """
+                === Update the models
+                """
+                if global_timestep.numpy() > agent.params.learning_start:
+                    states, actions, rewards, next_states, dones = replay_buffer.sample(agent.params.batch_size)
+                    loss = agent.update(states, actions, rewards, next_states, dones)
+                    soft_target_model_update_eager(agent.target_actor, agent.actor, tau=agent.params.soft_update_tau)
+                    soft_target_model_update_eager(agent.target_critic, agent.critic, tau=agent.params.soft_update_tau)
+
                 global_timestep.assign_add(1)
                 episode_len += 1
                 total_reward += reward
@@ -111,17 +120,6 @@ with summary_writer.as_default():
             ===== After 1 Episode is Done =====
             """
 
-            # train the model at this point
-            for t_train in range(10):
-                states, actions, rewards, next_states, dones = replay_buffer.sample(agent.params.batch_size)
-                # loss = agent.update(states, actions, rewards, next_states, dones)
-                for s, a, r, ns, d in zip(states, actions, rewards, next_states, dones):
-                    # print(s.shape, a.shape, r, ns.shape, d)
-                    loss = agent.update(s[np.newaxis, ...], a[np.newaxis, ...], r[np.newaxis, ...], ns[np.newaxis, ...],
-                                        d[np.newaxis, ...])
-                soft_target_model_update_eager(agent.target_actor, agent.actor, tau=agent.params.soft_update_tau)
-                soft_target_model_update_eager(agent.target_critic, agent.critic, tau=agent.params.soft_update_tau)
-
             # save the update models
             # agent.actor_manager.save()
             # agent.critic_manager.save()
@@ -131,10 +129,10 @@ with summary_writer.as_default():
             time_buffer.append(time.time() - start)
 
             # logging on Tensorboard
-            tf.contrib.summary.scalar("reward", total_reward, step=i)
-            tf.contrib.summary.scalar("exec time", time.time() - start, step=i)
+            tf.contrib.summary.scalar("reward", total_reward, step=global_timestep.numpy())
+            tf.contrib.summary.scalar("exec time", time.time() - start, step=global_timestep.numpy())
             if i >= agent.params.reward_buffer_ep:
-                tf.contrib.summary.scalar("Moving Ave Reward", np.mean(reward_buffer), step=i)
+                tf.contrib.summary.scalar("Moving Ave Reward", np.mean(reward_buffer), step=global_timestep.numpy())
 
             # logging
             if global_timestep.numpy() > agent.params.learning_start and i % agent.params.reward_buffer_ep == 0:

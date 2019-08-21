@@ -28,8 +28,9 @@ class GGNN(tf.keras.Model):
     Implementation based on https://arxiv.org/abs/1511.05493
     """
 
-    def __init__(self, state_dim, node_info, rec_hidden_unit=30, rec_output_unit=30, recurrent_step=3):
+    def __init__(self, state_dim, node_info, rec_hidden_unit=30, rec_output_unit=30, recurrent_step=3, batch_size=32):
         super(GGNN, self).__init__()
+        self.batch_size = batch_size
         self.recurrent_step = recurrent_step
         self.state_dim = state_dim
         self.node_info = node_info
@@ -72,8 +73,14 @@ class GGNN(tf.keras.Model):
         }
         node_embed = self._dict_to_matrix(self.node_info["input_dict"], node_embed)
 
-        # Concat: (num_node x node_state_dim), (num_node x node_state_dim) => num_node x node_state_dim*2
-        hidden_state = tf.concat([self.processed_node_params, node_embed], axis=-1)
+        # Concat information
+        if len(node_embed.shape) == 3:
+            # (batch_size x num_node x node_state_dim), (batch_size x num_node x node_state_dim)
+            # => batch_size x num_node x node_state_dim*2
+            hidden_state = tf.concat([[self.processed_node_params]*self.batch_size, node_embed], axis=-1)
+        else:
+            # (num_node x node_state_dim), (num_node x node_state_dim) => num_node x node_state_dim*2
+            hidden_state = tf.concat([self.processed_node_params, node_embed], axis=-1)
 
         prop_state = list()
         for t in range(self.recurrent_step):
@@ -90,18 +97,24 @@ class GGNN(tf.keras.Model):
             # num_node x node_state_dim*2 -> num_node x node_state_dim*2
             output, hidden_state = self.recurrent_unit(msgs, hidden_state)
 
+        # step 6: Readout function
         output = self.hidden_to_output(hidden_state)
-        means = tf.gather(tf.reshape(output, [-1]), self.node_info["output_list"])
+
+        # step 7: Construct the Gaussian distribution over the action
+        means = tf.gather(tf.reshape(output, output.shape[:-1]), self.node_info["output_list"], axis=-1)
         actions = tfp.distributions.Normal(loc=means, scale=self.sigmas).sample(1)
         return actions
 
     def _gather_obs_at_node(self, state, node_id):
-        return tf.gather(state, self.node_info["input_dict"][node_id], axis=1)
+        return tf.gather(state, self.node_info["input_dict"][node_id], axis=-1)
 
     def _dict_to_matrix(self, loop_list, item):
         for i, data in enumerate(loop_list):
             if i == 0:
                 temp = item[data]
             else:
-                temp = tf.concat([temp, item[data]], axis=0)
+                if len(item[data].shape) == 3: # in the case of batch learning
+                    temp = tf.concat([temp, item[data]], axis=1)
+                else:
+                    temp = tf.concat([temp, item[data]], axis=0)
         return tf.cast(temp, dtype=tf.float32)
