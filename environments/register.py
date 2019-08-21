@@ -180,6 +180,7 @@ def get_mujoco_model_settings():
                     'Hopper-v1': 1,
                     'Walker2d-v1': 1,
                     'AntS-v1': 2,
+                    'AntWithGoal-v1': 2,
                     'Swimmer-v1': 2,
 
                     'WalkersHopper-v1': 1,
@@ -195,6 +196,7 @@ def get_mujoco_model_settings():
                 'Hopper-v1': 'hopper.xml',
                 'Walker2d-v1': 'walker2d.xml',
                 'AntS-v1': 'ant.xml',
+                'AntWithGoal-v1': 'ant_with_goal.xml',
                 'Swimmer-v1': 'SnakeThree.xml',
 
                 'WalkersHopper-v1': 'WalkersHopper.xml',
@@ -212,6 +214,7 @@ def get_mujoco_model_settings():
         'Hopper-v1': ['qpos', 'qvel'],
         'Walker2d-v1': ['qpos', 'qvel'],
         'AntS-v1': ['qpos', 'qvel', 'cfrc'],
+        'AntWithGoal-v1': ['qpos', 'qvel', 'cfrc'],
         'Swimmer-v1': ['qpos', 'qvel'],
 
         'WalkersHopper-v1': ['qpos', 'qvel'],

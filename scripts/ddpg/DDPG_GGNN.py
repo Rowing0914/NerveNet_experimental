@@ -12,6 +12,7 @@ import graph_util.gnn_util as gnn_util
 from graph_util.mujoco_parser import parse_mujoco_graph
 from network.ggnn import GGNN
 from agent.DDPG import DDPG
+import environments.register as register
 
 eager_setup()
 
@@ -43,11 +44,11 @@ params.goal = 0
 
 now = datetime.datetime.now()
 
-params.log_dir = "../../logs/logs/DDPG-GGNN-{}-seed{}/{}".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
-params.actor_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/actor/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
-params.critic_model_dir = "../../logs/models/DDPG-GGNN-{}-seed{}/{}/critic/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
-params.video_dir = "../../logs/video/DDPG-GGNN-{}-seed{}/{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
-params.plot_path = "../../logs/plots/DDPG-GGNN-{}-seed{}/{}/".format(params.train_flg, params.seed, str(params.env_name.split("-")[0]))
+params.log_dir = "../logs/logs/DDPG-GGNN-seed{}/{}".format(params.seed, str(params.env_name.split("-")[0]))
+params.actor_model_dir = "../logs/models/DDPG-GGNN-seed{}/{}/actor/".format(params.seed, str(params.env_name.split("-")[0]))
+params.critic_model_dir = "../logs/models/DDPG-GGNN-seed{}/{}/critic/".format(params.seed, str(params.env_name.split("-")[0]))
+params.video_dir = "../logs/video/DDPG-GGNN-seed{}/{}/".format(params.seed, str(params.env_name.split("-")[0]))
+params.plot_path = "../logs/plots/DDPG-GGNN-seed{}/{}/".format(params.seed, str(params.env_name.split("-")[0]))
 
 # Instantiate Env
 env = gym.make(params.env_name)
@@ -155,6 +156,6 @@ with summary_writer.as_default():
                 action_buffer.append(eval_action)
                 distance_buffer.append(eval_distance)
                 visualise_act_and_dist(np.array(eval_epochs), np.array(action_buffer), np.array(distance_buffer),
-                                       file_dir=agent.params.plot_path)
+                                       file_dir=agent.params.plot_path, env_name=agent.params.env_name)
                 env.close()
                 break

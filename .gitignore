@@ -19,3 +19,4 @@ video/
 *.zip
 /environments/.pytest_cache/
 .idea
+logs/

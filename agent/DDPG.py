@@ -3,6 +3,7 @@ import tensorflow as tf
 from copy import deepcopy
 from tf_rl.common.utils import create_checkpoint
 
+
 class DDPG:
     def __init__(self, ggnn, critic, node_info, num_action, params):
         self.params = params

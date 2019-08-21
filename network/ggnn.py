@@ -3,6 +3,7 @@ import tensorflow_probability as tfp
 
 XAVIER_INIT = tf.contrib.layers.xavier_initializer()
 
+
 class GRU_cell(tf.keras.Model):
     def __init__(self, hidden_unit, output_nodes):
         super(GRU_cell, self).__init__()
@@ -19,6 +20,7 @@ class GRU_cell(tf.keras.Model):
         current_hidden_state = tf.multiply((1 - z), h) + tf.multiply(previous_hidden_state, z)
         output = self.h_to_o(current_hidden_state)
         return output, current_hidden_state
+
 
 class GGNN(tf.keras.Model):
     """
@@ -59,7 +61,7 @@ class GGNN(tf.keras.Model):
         self.hidden_to_output = tf.keras.layers.Dense(1, activation="tanh", kernel_initializer=XAVIER_INIT)
 
         # STD for Action Distribution(Gaussian)
-        self.sigmas = tf.Variable([0.3]*len(self.node_info["output_list"]))
+        self.sigmas = tf.Variable([0.3] * len(self.node_info["output_list"]))
         # self.sigmas = tf.keras.layers.Dense(len(self.node_info["output_list"]), activation='linear', kernel_initializer=XAVIER_INIT)
 
     def call(self, obs):
