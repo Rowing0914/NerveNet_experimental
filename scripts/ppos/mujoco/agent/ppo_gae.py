@@ -49,6 +49,7 @@ def train_model(actor, critic, memory, actor_optim, critic_optim):
     # ----------------------------
     # step 1: get returns and GAEs and log probability of old policy
     returns, advants = get_gae(rewards, masks, values)
+    print(returns, advants)
     mu, std, logstd = actor(torch.Tensor(states))
     old_policy = log_density(torch.Tensor(actions), mu, std, logstd)
     old_values = critic(torch.Tensor(states))

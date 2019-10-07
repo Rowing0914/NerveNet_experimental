@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--algorithm', type=str, default='PPO',
                     help='select one of algorithms among Vanilla_PG,'
                          'NPG, TPRO, PPO')
-parser.add_argument('--env', type=str, default="AntWithGoal-v1",
+parser.add_argument('--env', type=str, default="Ant-v2",
                     help='name of Mujoco environement')
 parser.add_argument('--load_model', type=str, default=None)
 parser.add_argument('--render', default=False, action="store_true")
@@ -72,7 +72,7 @@ if __name__=="__main__":
     env.seed(500)
     torch.manual_seed(500)
 
-    num_inputs = env.observation_space["flat_obs"].shape[0]
+    num_inputs = env.observation_space.shape[0]
     num_actions = env.action_space.shape[0]
 
     print('state size:', num_inputs)
@@ -112,7 +112,6 @@ if __name__=="__main__":
         while steps < 2048:
             episodes += 1
             state = env.reset()
-            state = state["flat_obs"]
             state = running_state(state)
             score = 0
             for _ in range(10000):
@@ -123,7 +122,6 @@ if __name__=="__main__":
                 mu, std, _ = actor(torch.Tensor(state).unsqueeze(0))
                 action = get_action(mu, std)[0]
                 next_state, reward, done, _ = env.step(action)
-                next_state = next_state["flat_obs"]
                 next_state = running_state(next_state)
 
                 if done:
